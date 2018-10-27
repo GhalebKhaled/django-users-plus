@@ -14,6 +14,7 @@ import django.contrib.auth.admin
 import django.utils.html
 import django.template.response
 import django.utils.decorators
+from django.utils.safestring import mark_safe
 import django.urls
 import django.views.decorators.debug
 from django.utils.translation import ugettext_lazy as _
@@ -21,8 +22,8 @@ from django.contrib import messages
 from django.conf import settings
 from django.apps import apps
 
-import signals
-import models
+from accountsplus import signals
+from accountsplus import models
 
 
 sensitive_post_parameters_m = django.utils.decorators.method_decorator(
@@ -185,12 +186,12 @@ class BaseUserAdmin(django.contrib.auth.admin.UserAdmin):
     reset_passwords.short_description = 'Send password reset emails to selected Users'
 
     def get_timezone(self, obj):
-        return unicode(obj.timezone)
+        return str(obj.timezone)
 
     def masquerade(self, obj):
-        return '<a href="{}">sign in</a>'.format(django.urls.reverse('masquerade', kwargs={'user_id': obj.id}))
+        return mark_safe(
+            '<a href="{}">sign in</a>'.format(django.urls.reverse('masquerade', kwargs={'user_id': obj.id})))
     masquerade.short_description = 'Sign in'
-    masquerade.allow_tags = True
 
     @sensitive_post_parameters_m
     def user_change_password(self, request, id, form_url=''):

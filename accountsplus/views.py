@@ -14,14 +14,14 @@ import django.shortcuts
 import django.http
 import django.template.response
 import django.utils.module_loading
-import django.core.urlresolvers
+import django.urls
 from django.conf import settings as app_settings
 
 from axes import utils
 
-import signals
-import forms
-import settings
+from accountsplus import signals
+from accountsplus import forms
+from accountsplus import settings
 
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ def logout_then_login(request, login_url=None,  extra_context=None):
     if request.session.get('is_masquerading'):
         return django.shortcuts.redirect('end_masquerade')
     else:
-        return django.contrib.auth.views.logout_then_login(request, login_url, extra_context)
+        return django.contrib.auth.views.logout_then_login(request, login_url)
 
 
 @django.views.decorators.cache.never_cache
@@ -130,7 +130,7 @@ def password_change(request,
                     PasswordChangeForm,
                     current_app=None, extra_context=None):
     if post_change_redirect is None:
-        post_change_redirect = django.core.urlresolvers.reverse(
+        post_change_redirect = django.urls.reverse(
             'password_change_done')
     else:
         post_change_redirect = django.shortcuts.resolve_url(
@@ -158,35 +158,13 @@ def password_change(request,
     return django.template.response.TemplateResponse(request, template_name, context)
 
 
-@django.views.decorators.csrf.csrf_protect
-def password_reset(request,
-                   template_name='registration/password_reset_form.html',
-                   email_template_name='registration/password_reset_email.html',
-                   subject_template_name='registration/password_reset_subject.txt',
-                   password_reset_form=django.contrib.auth.forms.PasswordResetForm,
-                   token_generator=django.contrib.auth.views.default_token_generator,
-                   post_reset_redirect=None,
-                   from_email=None,
-                   current_app=None,
-                   extra_context=None,
-                   html_email_template_name=None,
-                   extra_email_context=None):
-    User = django.contrib.auth.get_user_model()
-
-    response = django.contrib.auth.views.password_reset(
-        request, template_name, email_template_name,
-        subject_template_name, password_reset_form, token_generator,
-        post_reset_redirect, from_email, extra_context,
-        html_email_template_name, extra_email_context)
-    if request.method == 'POST':
-        email = request.POST['email']
-        try:
-            user = User.objects.get(email=email)
+class PasswordResetView(django.contrib.auth.views.PasswordResetView):
+    def form_valid(self, form):
+        result = super().form_valid(form)
+        for user in form.get_users(form.cleaned_data['email']):
             signals.user_password_reset_request.send(
-                sender=password_reset, request=request, user=user)
-        except User.DoesNotExist:
-            pass
-    return response
+                sender=PasswordResetView, request=self.request, user=user)
+        return result
 
 
 class GenericLockedView(django.views.generic.FormView):
