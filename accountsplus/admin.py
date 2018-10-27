@@ -21,8 +21,8 @@ from django.contrib import messages
 from django.conf import settings
 from django.apps import apps
 
-import signals
-import models
+from accountsplus import signals
+from accountsplus import models
 
 
 sensitive_post_parameters_m = django.utils.decorators.method_decorator(

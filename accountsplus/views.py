@@ -14,14 +14,14 @@ import django.shortcuts
 import django.http
 import django.template.response
 import django.utils.module_loading
-import django.core.urlresolvers
+import django.urls
 from django.conf import settings as app_settings
 
 from axes import utils
 
-import signals
-import forms
-import settings
+from accountsplus import signals
+from accountsplus import forms
+from accountsplus import settings
 
 
 logger = logging.getLogger(__name__)
@@ -130,7 +130,7 @@ def password_change(request,
                     PasswordChangeForm,
                     current_app=None, extra_context=None):
     if post_change_redirect is None:
-        post_change_redirect = django.core.urlresolvers.reverse(
+        post_change_redirect = django.urls.reverse(
             'password_change_done')
     else:
         post_change_redirect = django.shortcuts.resolve_url(
