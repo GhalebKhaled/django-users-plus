@@ -17,8 +17,6 @@ import django.utils.module_loading
 import django.urls
 from django.conf import settings as app_settings
 
-from axes import utils
-
 from accountsplus import signals
 from accountsplus import forms
 from accountsplus import settings
@@ -176,6 +174,7 @@ class GenericLockedView(django.views.generic.FormView):
         return django.urls.reverse_lazy(self.urlPattern)
 
     def form_valid(self, form):
+        from axes import utils
         utils.reset(username=form.cleaned_data['username'])
         return super(GenericLockedView, self).form_valid(form)
 
